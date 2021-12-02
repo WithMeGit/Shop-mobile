@@ -1,0 +1,283 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/PageMain_layout.cshtml";
+}
+@section Mobile{
+    <div id="content">
+
+    </div>
+}
+
+@section MODEL_DIALOG {
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Id" />
+                                <label>Mobile Name</label>
+                                <input type="text" id="MobileName" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                @using (Html.BeginForm("Index", "PageMain", null, FormMethod.Post,
+                                                    new { enctype = "multipart/form-data", id = "UploadForm" }))
+                                {
+                                    <lable>ImagePath</lable>
+                                    <input type="file" name="file" class="form-control" id="ImagePath" />
+                                    <input type="submit" id="btnsubmit" class="hidden" />
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Price</label>
+                                <input type="text" id="Price" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Type</label>
+                                <select class="form-control" id="Type">
+                                    <option value="Iphone">Iphone</option>
+                                    <option value="SamSung">SamSung</option>
+                                    <option value="Oppo">Oppo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+}
+
+@section Script {
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        var isUpdatable = false;
+        var currentUpdatePath = "";
+        var currentId = 0;
+
+        $(document).ready(function () {
+            showMobiles();
+
+            $("#btnCreateNew").click(function (e) {
+                isUpdatable = false;
+                $("#title").text("Create New");
+            });
+
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    Id: $("#Id").val(),
+                    MobileName: $("#MobileName").val(),
+                    ImagePath: $("#ImagePath").val(),
+                    Price: $("#Price").val(),
+                    Type: $("#Type").val()
+                }
+                if (!isUpdatable) {
+                    if (!data.ImagePath || !data.MobileName || !data.Price || !data.Type) {
+                        alert("You should input Mobile Name, choose Image, input price and Type");
+                        return;
+                    }
+                }
+                else {
+                    if (!data.ImagePath)
+                        data.ImagePath = currentUpdatePath;
+                    data.Id = currentId;
+                }
+
+                alert(data.ImagePath);
+                $("#UploadForm").submit();
+
+                if (!isUpdatable) {
+                    $.ajax({
+                        url: '/Admin/PageMain/Create/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            showMobiles();
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+                else {
+                    $.ajax({
+                        url: '/Admin/PageMain/Update/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            showMobiles();
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+            });
+
+            $("#btnSearch").click(function (e) {
+                showSearchMobiles();
+            });
+
+            function clearModalContent() {
+                $("#MobileName").val("");
+                $("#ImagePath").val("");
+                $("#Price").val("");
+                $("#Tpye").val();
+                isUpdatable = false;
+            }
+        });
+
+        function showMobiles() {
+            $("#content").empty();
+
+            $.ajax({
+                url: '/Admin/PageMain/ListMobile',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    var count = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var mobilename = item.MobileName;
+                        var tagimage = item.ImagePath;
+                        var tagprice = item.Price;
+                        var tagType = item.Type;
+
+                        if (count == 3) {
+                            count = 1;
+                        }
+                        else {
+                            count++;
+                        }
+                        AppendNewMobile(id, count, mobilename, tagimage, tagprice, tagType);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function showSearchMobiles() {
+            var data = {
+                Id: "",
+                MobileName: $("#SearchMobileName").val(),
+                ImagePath: "",
+                Price: "",
+                Type: $("#SearchType").val()
+            }
+            $("#content").empty();
+
+            $.ajax({
+                url: '/Admin/PageMain/Search',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    var count = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var mobilename = item.MobileName;
+                        var tagimage = item.ImagePath;
+                        var tagprice = item.Price;
+                        var tagtype = item.Type;
+                        if (count == 3) {
+                            count = 1;
+                        }
+                        else {
+                            count++;
+                        }
+                        AppendNewMobile(id, count, mobilename, tagimage, tagprice, tagtype);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function AppendNewMobile(id, count, mobilename, tagimage, tagprice, tagtype) {
+            rows = ' ';
+            rows += '<div id="column' + count + '">';
+            rows += '<div class="image"><img src="/Assets/Mobile/' + tagimage + '" width="156" height="300" alt="" /></div>';
+            rows += '<h2>' + mobilename + '</h2>';
+            rows += '<div class="tagcontent"></div>';
+            rows += '<div class="tagcost"><strong>Price: $' + tagprice + '</strong></div>';
+            rows += '<div class="tagcost"><strong>Type: ' + tagtype + '</strong></div>';
+            rows += '<div class="groupbutton">';
+            rows += '<p class="button"><a href="#">Read More</a></p>';
+            rows += "<button type='button' id='btnEdit' class='btn btn-primary' " +
+                "data-toggle='modal' data-target='#CreateEditModal' " +
+                "onclick='return getDetailMobile(" + id + ")'>Edit</button>&nbsp;";
+            rows += "<button type='button' id='btnDelete' class='btn btn-danger'" +
+                "onclick='return deleteMobile(" + id + ")'>Delete</button>";
+            rows += '</div>';
+            rows += '</div>';
+            $("#content").append(rows);
+        };
+
+        function deleteMobile(id) {
+            var confirmDetele = confirm("Do you want to delete Mobile?");
+            $.ajax({
+                url: '/Admin/PageMain/Delete/' + id,
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    showMobiles();
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function getDetailMobile(id) {
+            isUpdatable = true;
+            currentUpdatePath = "";
+            currentId = 0;
+            $("#title").text("Edit");
+
+            $.ajax({
+                url: '/Admin/PageMain/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#MobileName").val(data.MobileName);
+                    $("#Price").val(data.Price);
+                    $("#Type").val(data.Type);
+                    currentUpdatePath = data.ImagePath;
+                    currentId = data.Id;
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}
+
+
+

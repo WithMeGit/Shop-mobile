@@ -1,0 +1,282 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Main/Views/Shared/Cart_layout.cshtml";
+}
+
+@section TABLE {
+    <tbody id="content">
+    </tbody>
+}
+
+@section MODEL_DIALOG {
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Id" />
+                                <label>User Name</label>
+                                <input type="text" id="UserName" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>User Email</label>
+                                <input type="text" id="UserEmail" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Date </label>
+                                <input type="text" id="CreateDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Mobile Name</label>
+                                <input type="text" id="MobileName" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Quantity</label>
+                                <input type="text" id="Quantity" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@section Script {
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        var isUpdatable = false;
+        var currentId = 0;
+
+        $(document).ready(function () {
+            showCart();
+
+            $("#btnCreateNew").click(function (e) {
+                isUpdatable = false;
+                $("#title").text("Create New");
+                var now = new Date();
+                var day = now.getDate().toString();
+                var month = (now.getMonth() + 1).toString();
+                var year = now.getFullYear().toString();
+                if (day.length == 1)
+                    day = "0" + day;
+                if (month.length == 1)
+                    month = "0" + month;
+                $("#CreateDate").val(year + "-" + month + "-" + day);
+
+            });
+
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    Id: $("#Id").val(),
+                    UserName: $("#UserName").val(),
+                    UserEmail: $("#UserEmail").val(),
+                    CreateDate: $("#CreateDate").val(),
+                    MobileName: $("#MobileName").val(),
+                    Quantity: $("#Quantity").val()
+                }
+
+                if (!isUpdatable) {
+                    if (!data.UserName || !data.UserEmail || !data.MobileName || !data.Quantity) {
+                        alert("You should input UserName, User email, Mobile name and Mobile price ");
+                        return;
+                    }
+                }
+                else {
+                    data.Id = currentId;
+                }
+
+                alert("Success");
+                $("#UploadForm").submit();
+
+                if (!isUpdatable) {
+                    $.ajax({
+                        url: '/Cart/Create/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            showCart();
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+                else {
+                    $.ajax({
+                        url: '/Cart/Update/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            showCart();
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+            });
+
+            $("#btnSearch").click(function (e) {
+                showSearchCart();
+            });
+
+            function clearModalContent() {
+                $("#UserName").val("");
+                $("#UserEmail").val("");
+                $("#CreateDate").val("");
+                $("#MobileName").val("");
+                $("#Quantity").val("");
+                isUpdatable = false;
+            }
+        });
+
+
+
+        function showCart() {
+            $("#content").empty();
+
+            $.ajax({
+                url: '/Cart/ListCart/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var UserName = item.UserName;
+                        var Useremail = item.UserEmail;
+                        var Date = item.CreateDate;
+                        var MobileName = item.MobileName;
+                        var Quantity = item.Quantity;
+
+                        AppendNewCart(id, UserName, Useremail, Date, MobileName, Quantity);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function showSearchCart() {
+            var data = {
+                Id: "",
+                UserName: $("#SearchUserName").val(),
+                UserEmail: $("#SearchUserEmail").val(),
+                CreateDate: "",
+                MobileName: "",
+                Quantity: ""
+            }
+            $("#content").empty();
+
+            $.ajax({
+                url: '/Cart/Search/',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var UserName = item.UserName;
+                        var Useremail = item.UserEmail;
+                        var Date = item.CreateDate;
+                        var MobileName = item.MobileName;
+                        var Quantity = item.Quantity;
+
+                        AppendNewCart(id, UserName, Useremail, Date, MobileName, Quantity);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        }
+
+        function AppendNewCart(id, UserName, Useremail, Date, MobileName, Quantity) {
+            rows = ' ';
+            rows += '<tr>';
+            rows += '<td>' + UserName + '</td>';
+            rows += '<td>' + Useremail + '</td>';
+            rows += '<td>' + Date + '</td>';
+            rows += '<td>' + MobileName + '</td>';
+            rows += '<td>' + Quantity + '</td>';
+            rows += '<td>';
+            rows += "<button type='button' id='btnEdit' class='btn btn-primary' " +
+                "data-toggle='modal' data-target='#CreateEditModal' " +
+                "onclick='return getDetailCart(" + id + ")'>Edit</button>&nbsp;";
+            rows += "<button type='button' id='btnDelete' class='btn btn-danger'" +
+                "onclick='return deleteCart(" + id + ")'>Delete</button>";
+            rows += '</td>';
+            rows += '</tr>';
+            $("#content").append(rows);
+        };
+
+        function deleteCart(id) {
+            var confirmDelete = confirm("Do you want to delete cart?");
+            $.ajax({
+                url: '/Cart/Delete/' + id,
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    showCart();
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        }
+
+        function getDetailCart(id) {
+            isUpdatable = true;
+            currentId = 0;
+
+            $("#title").text("Edit");
+
+            $.ajax({
+                url: '/Cart/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#UserName").val(data.UserName);
+                    $("#UserEmail").val(data.UserEmail);
+                    $("#CreateDate").val(data.CreateDate);
+                    $("#MobileName").val(data.MobileName);
+                    $("#Quantity").val(data.Quantity);
+                    currentId = data.Id;
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}
+

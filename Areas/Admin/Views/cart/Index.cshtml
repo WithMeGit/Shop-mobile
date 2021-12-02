@@ -1,0 +1,237 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/Cart_layout.cshtml";
+}
+@section TABLE {
+    <tbody id="content_cart">
+
+    </tbody>
+}
+
+@section MODEL_DIALOG {
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Id" />
+                                <label>User Name</label>
+                                <input type="text" id="UserName" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>User Email</label>
+                                <input type="text" id="UserEmail" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Date </label>
+                                <input type="text" id="CreateDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Mobile Name</label>
+                                <input type="text" id="MobileName" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Quantity</label>
+                                <input type="text" id="Quantity" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Script {
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        var currentId = 0;
+
+        $(document).ready(function () {
+            showCart();
+
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    Id: currentId,
+                    UserName: $("#UserName").val(),
+                    UserEmail: $("#UserEmail").val(),
+                    CreateDate: $("#CreateDate").val(),
+                    MobileName: $("#MobileName").val(),
+                    Quantity: $("#Quantity").val()
+                }
+
+                alert("Success");
+                $("#UploadForm").submit();
+
+
+                $.ajax({
+                    url: '/Admin/Cart/Update/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: data,
+                    success: function (data) {
+                        showCart();
+                        clearModalContent();
+                    },
+                    error: function (err) {
+                        alert("Error: " + err.responseText);
+                    }
+                });
+
+            });
+
+            $("#btnSearch").click(function (e) {
+                showSearchCart();
+            });
+
+            function clearModalContent() {
+                $("#UserName").val("");
+                $("#UserEmail").val("");
+                $("#CreateDate").val("");
+                $("#MobileName").val("");
+                $("#Quantity").val("");
+                isUpdatable = false;
+            };
+        });
+
+        function showCart() {
+            $("#content_cart").empty();
+
+            $.ajax({
+                url: '/Admin/Cart/ListCart/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var Username = item.UserName;
+                        var Useremail = item.UserEmail;
+                        var date = item.CreateDate;
+                        var Mobilename = item.MobileName;
+                        var quantity = item.Quantity;
+
+                        AppendNewCart(id, Username, Useremail, date, Mobilename, quantity);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function showSearchCart() {
+            var data = {
+                Id: "",
+                UserName: $("#SearchUserName").val(),
+                UserEmail: $("#SearchUserEmail").val(),
+                CreateDate: "",
+                MobileName: "",
+                Quantity: ""
+            }
+            $("#content_cart").empty();
+
+            $.ajax({
+                url: '/Admin/Cart/Search/',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var Username = item.UserName;
+                        var Useremail = item.UserEmail;
+                        var date = item.CreateDate;
+                        var Mobilename = item.MobileName;
+                        var quantity = item.Quantity;
+
+                        AppendNewCart(id, Username, Useremail, date, Mobilename, quantity);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        }
+
+        function AppendNewCart(id, Username, Useremail, date, Mobilename, quantity) {
+            rows = ' ';
+            rows += '<tr>';
+            rows += '<td>' + Username + '</td>';
+            rows += '<td>' + Useremail + '</td>';
+            rows += '<td>' + date + '</td>';
+            rows += '<td>' + Mobilename + '</td>';
+            rows += '<td>' + quantity + '</td>';
+            rows += '<td>';
+            rows += "<button type='button' id='btnEdit' class='btn btn-primary' " +
+                "data-toggle='modal' data-target='#CreateEditModal' " +
+                "onclick='return getDetailCart(" + id + ")'>Edit</button>&nbsp;";
+            rows += "<button type='button' id='btnDelete' class='btn btn-danger'" +
+                "onclick='return deleteCart(" + id + ")'>Delete</button>";
+            rows += '</td>';
+            rows += '</tr>';
+            rows += '</tr>';
+            $("#content_cart").append(rows);
+        };
+
+        function deleteCart(id) {
+            var confirmDelete = confirm("Do you want to delete Cart?");
+            $.ajax({
+                url: '/Admin/Cart/Delete/' + id,
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    showCart();
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function getDetailCart(id) {
+            currentId = 0;
+
+            $("#title").text("Edit");
+
+            $.ajax({
+                url: '/Admin/Cart/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#UserName").val(data.UserName);
+                    $("#UserEmail").val(data.UserEmail);
+                    $("#CreateDate").val(data.CreateDate);
+                    $("#MobileName").val(data.MobileName);
+                    $("#Quantity").val(data.Quantity);
+                    currentId = data.Id;
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}
+

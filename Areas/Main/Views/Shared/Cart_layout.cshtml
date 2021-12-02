@@ -1,0 +1,35 @@
+﻿
+@{
+    ViewBag.Title = "Cart_layout";
+    Layout = "~/Areas/Main/Views/Shared/_layout1.cshtml";
+}
+<div id="wrapper">
+    <h1 class="col-md-10">Cart Information</h1>
+    <div class="col-md-10">
+        <button type="button" id="btnCreateNew" data-toggle="modal" data-target="#CreateEditModal"
+                class="btn btn-success">
+            Create New
+        </button>
+    </div>
+    <table id="table-transaction" class="table-hover table" border="1">
+        <thead style="background-color: #e19241;padding: 5px;">
+            <tr style="color: black">
+                <td>UserName</td>
+                <td>UserEmail</td>
+                <td>CreateDate</td>
+                <td>MobileName</td>
+                <td>Quantity</td>
+                <td>Manipulation</td>
+            </tr>
+        </thead>
+
+        @RenderSection("TABLE", required: false)
+
+    </table>
+</div>
+
+@RenderSection("MODEL_DIALOG", required: false)
+
+@RenderSection("Script", required: false)
+
+

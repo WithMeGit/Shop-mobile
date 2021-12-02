@@ -1,0 +1,54 @@
+﻿
+@{
+    ViewBag.Title = "Deal_layout";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<div id="wrapper">
+    <h1>Manager Cart</h1>
+    <div class="form-group">
+        <div class="col-md-10">
+            <label>Search User Name</label>
+            <input type="text" id="SearchUserName" class="form-control" placeholder="Search ..." />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-10">
+            <label>Search User Email</label>
+            <input type="text" id="SearchUserEmail" class="form-control" placeholder="Search ..." />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-12">
+            &nbsp;
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-10">
+            <button type="button" id="btnSearch" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+    <h1 class="col-md-10">Cart Information</h1>
+    <table id="table-transaction" class="table-hover table" border="1">
+        <thead style="background-color:#e19241; padding:5px;">
+            <tr>
+                <td>UserName</td>
+                <td>UserEmail</td>
+                <td>CreateDate</td>
+                <td>MobiletName</td>
+                <td>Quantity</td>
+                <td>Manipulation</td>
+            </tr>
+        </thead>
+
+        @RenderSection("TABLE", required: false)
+
+    </table>
+    <div class="form-group">
+        <div class="col-md-10">
+            @Html.ActionLink("Create Report File", "Report", "Cart","",new { @class = "btn btn-success" })
+        </div>
+    </div>
+</div>
+@RenderSection("MODEL_DIALOG", required: false)
+@RenderSection("Script", required: false)
+
